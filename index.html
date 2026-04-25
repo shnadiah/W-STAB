@@ -4,163 +4,321 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>W-AF Risk Score - W-STAB</title>
-    <meta name="theme-color" content="#1d4ed8">
+    <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            background: #0f172a; /* Fallback */
+            background: radial-gradient(circle at top right, #312e81, #0f172a);
+            min-height: 100vh;
+        }
         .calculator-page { display: none; }
-        .active-page { display: flex; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .active-page { display: flex; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(30px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
         
-        .toggle-btn { transition: all 0.2s ease; background-color: #e2e8f0; color: #1e293b; border: 1px solid transparent; white-space: nowrap; }
-        .toggle-btn.active { background-color: #14b8a6; color: white; border-color: #14b8a6; }
+        .toggle-btn { 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            background-color: #f8fafc; 
+            color: #64748b; 
+            border: 1px solid #e2e8f0;
+            white-space: nowrap; 
+        }
+        .toggle-btn.active { 
+            background-color: #4f46e5; 
+            color: white; 
+            border-color: #4338ca;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+        }
         
-        .modal { transition: opacity 0.25s ease; }
-        .modal-content { transition: transform 0.25s ease; }
+        .modal { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+        }
+
+        .score-circle {
+            background: radial-gradient(circle at center, #ffffff 0%, #f8fafc 100%);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        /* Decorative "Pop" Elements */
+        .glow-orb {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, rgba(79, 70, 229, 0) 70%);
+            border-radius: 50%;
+            z-index: -1;
+            pointer-events: none;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-100 to-sky-100 text-slate-700 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-blue-500 selection:text-white">
+<body class="text-slate-800 flex flex-col items-center justify-center p-4 selection:bg-indigo-500 selection:text-white">
+
+    <div class="glow-orb top-0 left-0"></div>
+    <div class="glow-orb bottom-0 right-0"></div>
 
     <!-- HOME MENU HUB -->
-    <div id="main-menu" class="active-page flex-col w-full max-w-2xl bg-white shadow-xl rounded-xl border border-slate-200 overflow-hidden">
-        <header class="p-8 text-center border-b border-slate-200 bg-white">
-            <h1 class="text-3xl md:text-4xl font-bold text-blue-700 uppercase tracking-tight">W-AF Risk Score</h1>
-            <p class="mt-2 text-base text-slate-600 font-medium italic uppercase">INR Stabilization Tools</p>
+    <div id="main-menu" class="active-page flex-col w-full max-w-2xl glass-card shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] rounded-[2.5rem] border border-white/20 overflow-hidden">
+        <header class="p-12 text-center border-b border-slate-100 bg-white/50 relative">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-indigo-500 rounded-b-full"></div>
+            <div class="inline-block p-2 px-5 bg-indigo-600 rounded-full mb-6 shadow-lg shadow-indigo-200">
+                <span class="text-white text-[10px] font-black uppercase tracking-[0.3em] italic">Clinical Portal</span>
+            </div>
+            <h1 class="text-5xl font-black text-slate-900 tracking-tighter leading-none mb-4">
+                W-AF <span class="text-indigo-600">Risk Score</span>
+            </h1>
+            <p class="text-xl text-slate-500 font-semibold tracking-tight uppercase">INR stabilization stratification tool</p>
         </header>
-        <div class="p-6 md:p-8 grid grid-cols-1 gap-4">
-            <button onclick="showPage('wstab6-page')" class="group p-6 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left">
-                <h2 class="text-xl font-bold text-blue-800 group-hover:text-blue-600 uppercase">W-STAB 6</h2>
-                <p class="text-sm text-slate-500 mt-1">INR Stabilization at 6 months</p>
+        <div class="p-10 grid grid-cols-1 gap-6 bg-slate-50/50">
+            <button onclick="showPage('wstab6-page')" class="group relative p-8 bg-white border-2 border-transparent rounded-[2rem] hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1 transition-all text-left shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">W-STAB 6</h2>
+                        <p class="text-slate-500 mt-2 font-bold italic">Predicting INR Stabilization at 6 months</p>
+                    </div>
+                    <div class="bg-indigo-600 text-white p-4 rounded-2xl shadow-lg shadow-indigo-100 transform group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                </div>
             </button>
-            <button onclick="showPage('wstab12-page')" class="group p-6 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left">
-                <h2 class="text-xl font-bold text-blue-800 group-hover:text-blue-600 uppercase">W-STAB 12</h2>
-                <p class="text-sm text-slate-500 mt-1">INR Stabilization at 12 months</p>
+            <button onclick="showPage('wstab12-page')" class="group relative p-8 bg-white border-2 border-transparent rounded-[2rem] hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1 transition-all text-left shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">W-STAB 12</h2>
+                        <p class="text-slate-500 mt-2 font-bold italic">Predicting INR Stabilization at 12 months</p>
+                    </div>
+                    <div class="bg-indigo-600 text-white p-4 rounded-2xl shadow-lg shadow-indigo-100 transform group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                </div>
             </button>
         </div>
-        <footer class="p-4 text-center text-[10px] text-slate-400 border-t border-slate-100 uppercase tracking-widest">
+        <footer class="p-8 text-center text-[11px] text-slate-400 border-t border-slate-100 bg-white/50 uppercase tracking-[0.25em] font-bold">
             Sharifah Nadiah 2025 • Educational Tool
         </footer>
     </div>
 
     <!-- W-STAB 6 MONTHS -->
-    <div id="wstab6-page" class="calculator-page flex-col w-full max-w-3xl bg-white shadow-xl rounded-xl border border-slate-200 overflow-hidden">
-        <header class="p-6 md:p-8 text-center border-b border-slate-200 relative">
-            <button onclick="showPage('main-menu')" class="absolute left-6 top-8 text-blue-600 hover:underline text-sm font-bold uppercase">&larr; Hub</button>
-            <h1 class="text-3xl md:text-4xl font-bold text-blue-700 uppercase">W-STAB 6</h1>
-            <p class="mt-2 text-base text-slate-600 italic font-bold leading-tight">INR Stabilisation at 6 Months</p>
-            <p class="mt-4 text-sm text-slate-500">
-                <strong class="text-amber-500">Disclaimer:</strong> This is an educational tool. The score is illustrative and <strong class="text-red-500">NOT</strong> a medical diagnosis. Always consult a healthcare professional.
-            </p>
+    <div id="wstab6-page" class="calculator-page flex-col w-full max-w-4xl glass-card shadow-2xl rounded-3xl border border-white overflow-hidden">
+        <header class="p-8 text-center border-b border-slate-100 relative bg-white/50">
+            <button onclick="showPage('main-menu')" class="absolute left-8 top-10 flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-bold uppercase tracking-wider group">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
+                Hub
+            </button>
+            <h1 class="text-3xl font-extrabold text-slate-900 uppercase tracking-tight">W-STAB 6</h1>
+            <p class="mt-1 text-indigo-600 font-bold uppercase tracking-widest text-xs">INR Stabilization at 6 Months</p>
+            <div class="mt-6 p-4 bg-amber-50 border border-amber-100 rounded-xl inline-flex items-start max-w-2xl text-left">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <p class="text-xs text-amber-800 leading-relaxed">
+                    <strong class="font-bold">Disclaimer:</strong> This is an educational tool. The score is illustrative and <strong class="text-red-600">NOT</strong> a medical diagnosis. Always consult a healthcare professional.
+                </p>
+            </div>
         </header>
-        <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-4" data-calc="w6">
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">Ethnicity</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-[10px]" data-var="eth"><button class="toggle-btn px-2 py-2" data-val="mal">Malay +1</button><button class="toggle-btn px-2 py-2" data-val="chi">Chinese +2</button><button class="toggle-btn px-2 py-2" data-val="ind">Indian</button><button class="toggle-btn px-2 py-2" data-val="oth">Others</button></div>
+        <div class="p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 bg-slate-50/20">
+            <div class="lg:col-span-7 space-y-6" data-calc="w6">
+                <!-- Row: Ethnicity -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">Ethnicity</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-[10px] font-bold uppercase tracking-wider" data-var="eth">
+                        <button class="toggle-btn px-3 py-2 rounded-lg" data-val="mal">Malay +1</button>
+                        <button class="toggle-btn px-3 py-2 rounded-lg mx-1" data-val="chi">Chinese +2</button>
+                        <button class="toggle-btn px-3 py-2 rounded-lg mr-1" data-val="ind">Indian</button>
+                        <button class="toggle-btn px-3 py-2 rounded-lg" data-val="oth">Others</button>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">Serum albumin</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="alb"><button class="toggle-btn px-4 py-2" data-val="30">≥ 30g/L +1</button><button class="toggle-btn px-4 py-2" data-val="low">< 30g/L</button></div>
+                <!-- Row: Albumin -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">Serum albumin</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="alb">
+                        <button class="toggle-btn px-5 py-2 rounded-lg mr-1" data-val="30">≥ 30g/L +1</button>
+                        <button class="toggle-btn px-5 py-2 rounded-lg" data-val="low">< 30g/L</button>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">Valvular heart disease</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="vhd"><button class="toggle-btn px-4 py-2" data-val="no">No +1</button><button class="toggle-btn px-4 py-2" data-val="yes">Yes</button></div>
+                <!-- Row: VHD -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">Valvular heart disease</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="vhd">
+                        <button class="toggle-btn px-6 py-2 rounded-lg mr-1" data-val="no">No +1</button>
+                        <button class="toggle-btn px-6 py-2 rounded-lg" data-val="yes">Yes</button>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm text-left leading-tight">DM with microvascular complications</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="dm"><button class="toggle-btn px-4 py-2" data-val="no">No +4</button><button class="toggle-btn px-4 py-2" data-val="yes">Yes</button></div>
+                <!-- Row: DM -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0 leading-tight">DM with microvascular complications</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="dm">
+                        <button class="toggle-btn px-6 py-2 rounded-lg mr-1" data-val="no">No +4</button>
+                        <button class="toggle-btn px-6 py-2 rounded-lg" data-val="yes">Yes</button>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">Hyperthyroidism</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="hyp"><button class="toggle-btn px-4 py-2" data-val="no">No +1</button><button class="toggle-btn px-4 py-2" data-val="yes">Yes</button></div>
+                <!-- Row: Hyperthyroid -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">Hyperthyroidism</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="hyp">
+                        <button class="toggle-btn px-6 py-2 rounded-lg mr-1" data-val="no">No +1</button>
+                        <button class="toggle-btn px-6 py-2 rounded-lg" data-val="yes">Yes</button>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">Day of first INR assessment</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="day1"><button class="toggle-btn px-4 py-2" data-val="7">≤ 7 days +1</button><button class="toggle-btn px-4 py-2" data-val="late">> 7 days</button></div>
+                <!-- Row: Day 1 -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">Day of first INR assessment</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="day1">
+                        <button class="toggle-btn px-5 py-2 rounded-lg mr-1" data-val="7">≤ 7 days +1</button>
+                        <button class="toggle-btn px-5 py-2 rounded-lg" data-val="late">> 7 days</button>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">First INR value</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="val1"><button class="toggle-btn px-4 py-2" data-val="15">≥ 1.5 +1</button><button class="toggle-btn px-4 py-2" data-val="low">< 1.5</button></div>
+                <!-- Row: INR Val -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">First INR value</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="val1">
+                        <button class="toggle-btn px-6 py-2 rounded-lg mr-1" data-val="15">≥ 1.5 +1</button>
+                        <button class="toggle-btn px-6 py-2 rounded-lg" data-val="low">< 1.5</button>
+                    </div>
                 </div>
             </div>
-            <div class="lg:col-span-1 bg-slate-50 rounded-lg p-6 flex flex-col justify-center items-center text-center border">
-                <h3 class="font-semibold text-slate-500 uppercase tracking-wider text-xs">Total Score</h3>
-                <div id="w6-score" class="text-7xl font-bold text-slate-400 my-3">0</div>
-                <div id="w6-desc" class="font-semibold text-lg">...</div>
-                <p class="text-[10px] text-slate-500 mt-4 leading-tight font-medium">A total score of 8 or more suggests "Likely stable INR within 6 months".</p>
+            <div class="lg:col-span-5 bg-indigo-900 rounded-3xl p-10 flex flex-col justify-center items-center text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 -mr-16 -mt-16 rounded-full"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 -ml-16 -mb-16 rounded-full"></div>
+                
+                <h3 class="font-bold text-indigo-200 uppercase tracking-[0.25em] text-[10px] mb-4">Cumulative Risk Score</h3>
+                <div class="score-circle w-40 h-40 rounded-full flex items-center justify-center mb-6">
+                    <div id="w6-score" class="text-7xl font-black text-slate-800">0</div>
+                </div>
+                <div id="w6-desc" class="font-bold text-xl text-white mb-4 leading-tight">...</div>
+                <div class="w-full h-px bg-white/20 mb-4"></div>
+                <p class="text-[11px] text-indigo-100/70 leading-relaxed font-medium">
+                    A total score of <span class="text-white font-bold italic">8 or more</span> suggests a higher likelihood of achieving stable INR within 6 months.
+                </p>
             </div>
         </div>
     </div>
 
     <!-- W-STAB 12 MONTHS -->
-    <div id="wstab12-page" class="calculator-page flex-col w-full max-w-3xl bg-white shadow-xl rounded-xl border border-slate-200 overflow-hidden">
-        <header class="p-6 md:p-8 text-center border-b border-slate-200 relative">
-            <button onclick="showPage('main-menu')" class="absolute left-6 top-8 text-blue-600 hover:underline text-sm font-bold uppercase">&larr; Hub</button>
-            <h1 class="text-3xl md:text-4xl font-bold text-blue-700 uppercase">W-STAB 12</h1>
-            <p class="mt-2 text-base text-slate-600 italic font-bold leading-tight">INR Stabilisation at 12 Months</p>
-            <p class="mt-4 text-sm text-slate-500">
-                <strong class="text-amber-500">Disclaimer:</strong> This is an educational tool. The score is illustrative and <strong class="text-red-500">NOT</strong> a medical diagnosis. Always consult a healthcare professional.
-            </p>
+    <div id="wstab12-page" class="calculator-page flex-col w-full max-w-4xl glass-card shadow-2xl rounded-3xl border border-white overflow-hidden">
+        <header class="p-8 text-center border-b border-slate-100 relative bg-white/50">
+            <button onclick="showPage('main-menu')" class="absolute left-8 top-10 flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-bold uppercase tracking-wider group">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
+                Hub
+            </button>
+            <h1 class="text-3xl font-extrabold text-slate-900 uppercase tracking-tight">W-STAB 12</h1>
+            <p class="mt-1 text-indigo-600 font-bold uppercase tracking-widest text-xs">INR Stabilization at 12 Months</p>
+            <div class="mt-6 p-4 bg-amber-50 border border-amber-100 rounded-xl inline-flex items-start max-w-2xl text-left">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <p class="text-xs text-amber-800 leading-relaxed">
+                    <strong class="font-bold">Disclaimer:</strong> This is an educational tool. The score is illustrative and <strong class="text-red-600">NOT</strong> a medical diagnosis. Always consult a healthcare professional.
+                </p>
+            </div>
         </header>
-        <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-4" data-calc="w12">
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">Age category</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="age"><button class="toggle-btn px-4 py-2" data-val="60">< 60 years +1</button><button class="toggle-btn px-4 py-2" data-val="old">≥ 60 years</button></div>
-                </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">Alcohol consumption</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="alc"><button class="toggle-btn px-4 py-2" data-val="no">No +3</button><button class="toggle-btn px-4 py-2" data-val="yes">Yes</button></div>
-                </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">Heart failure</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-xs" data-var="hf"><button class="toggle-btn px-4 py-2" data-val="no">No +2</button><button class="toggle-btn px-4 py-2" data-val="yes">Yes</button></div>
-                </div>
-                <div class="flex justify-between items-center"><span class="text-slate-600 font-medium text-sm">eGFR category</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-[10px]" data-var="egfr"><button class="toggle-btn px-2 py-2" data-val="30">< 30</button><button class="toggle-btn px-2 py-2" data-val="3059">30-59 +1</button><button class="toggle-btn px-2 py-2" data-val="60">≥ 60 +2</button></div>
-                </div>
-                <!-- UPDATED SECTION: Warfarin Dose -->
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center space-y-2 sm:space-y-0 text-left leading-tight">
-                    <span class="text-slate-600 font-medium text-xs">Total warfarin dose/week to reach 1st INR</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-sm" data-var="dose">
-                        <button class="toggle-btn px-4 py-2" data-val="20">< 20 mg/wk +1</button>
-                        <button class="toggle-btn px-4 py-2" data-val="high">≥ 20 mg/wk</button>
+        <div class="p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 bg-slate-50/20">
+            <div class="lg:col-span-7 space-y-6" data-calc="w12">
+                <!-- Row: Age -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">Age category</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="age">
+                        <button class="toggle-btn px-6 py-2 rounded-lg mr-1" data-val="60">< 60 years +1</button>
+                        <button class="toggle-btn px-6 py-2 rounded-lg" data-val="old">≥ 60 years</button>
                     </div>
                 </div>
-                <!-- UPDATED SECTION: Days to INR -->
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center space-y-2 sm:space-y-0 text-left leading-tight">
-                    <span class="text-slate-600 font-medium text-xs">Total days to achieve the 1st therapeutic INR</span>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden text-sm" data-var="days">
-                        <button class="toggle-btn px-2 py-2" data-val="14">≤ 14 days</button>
-                        <button class="toggle-btn px-2 py-2" data-val="15">15-28 days +3</button>
-                        <button class="toggle-btn px-2 py-2" data-val="late">> 28 days</button>
+                <!-- Row: Alcohol -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">Alcohol consumption</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="alc">
+                        <button class="toggle-btn px-7 py-2 rounded-lg mr-1" data-val="no">No +3</button>
+                        <button class="toggle-btn px-7 py-2 rounded-lg" data-val="yes">Yes</button>
+                    </div>
+                </div>
+                <!-- Row: HF -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">Heart failure</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="hf">
+                        <button class="toggle-btn px-7 py-2 rounded-lg mr-1" data-val="no">No +2</button>
+                        <button class="toggle-btn px-7 py-2 rounded-lg" data-val="yes">Yes</button>
+                    </div>
+                </div>
+                <!-- Row: eGFR -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0">eGFR category</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-[10px] font-bold uppercase tracking-wider" data-var="egfr">
+                        <button class="toggle-btn px-5 py-2 rounded-lg" data-val="30">< 30</button>
+                        <button class="toggle-btn px-5 py-2 rounded-lg mx-1" data-val="3059">30-59 +1</button>
+                        <button class="toggle-btn px-5 py-2 rounded-lg" data-val="60">≥ 60 +2</button>
+                    </div>
+                </div>
+                <!-- Row: Warfarin Dose -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0 leading-tight">Total warfarin dose/week to reach 1st INR</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="dose">
+                        <button class="toggle-btn px-4 py-2 rounded-lg mr-1" data-val="20">< 20 mg/wk +1</button>
+                        <button class="toggle-btn px-4 py-2 rounded-lg" data-val="high">≥ 20 mg/wk</button>
+                    </div>
+                </div>
+                <!-- Row: Days to INR -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-700 font-semibold mb-3 sm:mb-0 leading-tight">Total days to achieve the 1st therapeutic INR</span>
+                    <div class="flex rounded-xl p-1 bg-slate-100 text-xs font-bold uppercase tracking-wider" data-var="days">
+                        <button class="toggle-btn px-3 py-2 rounded-lg" data-val="14">≤ 14 days</button>
+                        <button class="toggle-btn px-3 py-2 rounded-lg mx-1" data-val="15">15-28 days +3</button>
+                        <button class="toggle-btn px-3 py-2 rounded-lg" data-val="late">> 28 days</button>
                     </div>
                 </div>
             </div>
-            <div class="lg:col-span-1 bg-slate-50 rounded-lg p-6 flex flex-col justify-center items-center text-center border">
-                <h3 class="font-semibold text-slate-500 uppercase tracking-wider text-xs">Total Score</h3>
-                <div id="w12-score" class="text-7xl font-bold text-slate-400 my-3">0</div>
-                <div id="w12-desc" class="font-semibold text-lg">...</div>
-                <p class="text-[10px] text-slate-500 mt-4 leading-tight font-medium">A total score of 6 or more suggests "Likely stable INR within 12 months".</p>
+            <div class="lg:col-span-5 bg-indigo-900 rounded-3xl p-10 flex flex-col justify-center items-center text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 -mr-16 -mt-16 rounded-full"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 -ml-16 -mb-16 rounded-full"></div>
+                
+                <h3 class="font-bold text-indigo-200 uppercase tracking-[0.25em] text-[10px] mb-4">Cumulative Risk Score</h3>
+                <div class="score-circle w-40 h-40 rounded-full flex items-center justify-center mb-6">
+                    <div id="w12-score" class="text-7xl font-black text-slate-800">0</div>
+                </div>
+                <div id="w12-desc" class="font-bold text-xl text-white mb-4 leading-tight">...</div>
+                <div class="w-full h-px bg-white/20 mb-4"></div>
+                <p class="text-[11px] text-indigo-100/70 leading-relaxed font-medium">
+                    A total score of <span class="text-white font-bold italic">6 or more</span> suggests a higher likelihood of achieving stable INR within 12 months.
+                </p>
             </div>
         </div>
     </div>
 
     <!-- HUB FOOTER -->
-    <footer class="text-center text-slate-500 text-xs mt-6 pb-4">
-        <button onclick="openModal('disclaimerHubModal')" class="text-blue-600 hover:underline mb-2 font-medium">View Medical Disclaimer</button>
-        <br>
-        &copy; Sharifah Nadiah 2025. Educational Use Only.
+    <footer class="text-center text-slate-400 text-xs mt-10 pb-10">
+        <button onclick="openModal('disclaimerHubModal')" class="text-indigo-400 hover:text-indigo-200 transition-colors mb-3 font-bold uppercase tracking-widest text-[10px]">View Medical Disclaimer</button>
+        <div class="opacity-50">&copy; Sharifah Nadiah 2025 • Educational Tool</div>
     </footer>
 
     <!-- MODAL: Hub Disclaimer -->
-    <div id="disclaimerHubModal" class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 modal opacity-0 pointer-events-none z-50">
-        <div class="modal-content bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 transform scale-95">
+    <div id="disclaimerHubModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 modal opacity-0 pointer-events-none z-50">
+        <div class="modal-content bg-white p-10 rounded-3xl shadow-2xl w-full max-w-lg border border-white transform scale-95">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-blue-700 uppercase">Disclaimer</h2>
-                <button onclick="closeModal('disclaimerHubModal')" class="text-slate-400 hover:text-slate-600 text-3xl">&times;</button>
+                <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Legal Notice</h2>
+                <button onclick="closeModal('disclaimerHubModal')" class="text-slate-300 hover:text-slate-900 text-4xl transition-colors">&times;</button>
             </div>
-            <div class="text-slate-600 text-sm space-y-4 leading-relaxed max-h-80 overflow-y-auto pr-2">
-                <ul class="list-disc list-inside space-y-3">
-                    <li class="text-justify">This tool is for informational and educational purposes only.</li>
-                    <li class="text-justify">Calculations are based on the W-STAB predictive models and should not replace professional medical judgment.</li>
-                    <li class="text-justify">The developers assume no responsibility for clinical decisions made using this tool.</li>
+            <div class="text-slate-600 text-sm space-y-4 leading-relaxed max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                <ul class="space-y-4">
+                    <li class="flex items-start">
+                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-3 flex-shrink-0"></div>
+                        <p>This tool is developed for <strong class="text-slate-900">informational and educational purposes only</strong> and is not intended to provide specific medical advice.</p>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-3 flex-shrink-0"></div>
+                        <p>Calculations are based on the <strong class="text-slate-900">W-STAB predictive models</strong>. Clinical decisions should always consider the individual patient context and guidelines.</p>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-3 flex-shrink-0"></div>
+                        <p>The developers and affiliated institutions assume no liability for patient outcomes or clinical decisions derived from using this interface.</p>
+                    </li>
                 </ul>
             </div>
-            <button onclick="closeModal('disclaimerHubModal')" class="w-full mt-8 bg-blue-700 text-white py-3 rounded-xl font-bold transition-colors hover:bg-blue-800">I Understand</button>
+            <button onclick="closeModal('disclaimerHubModal')" class="w-full mt-10 bg-indigo-600 text-white py-4 rounded-2xl font-bold transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95 shadow-md uppercase tracking-widest text-xs">I Acknowledge & Understand</button>
         </div>
     </div>
 
@@ -207,13 +365,11 @@
             const desc = document.getElementById('w6-desc');
             el.innerText = s;
             if (s >= 8) {
-                el.className = "text-7xl font-bold my-3 text-green-600";
                 desc.innerText = "Likely stable INR within 6 months";
-                desc.className = "font-semibold text-lg text-green-600 leading-tight";
+                desc.className = "font-bold text-xl text-emerald-400 mb-4 leading-tight";
             } else {
-                el.className = "text-7xl font-bold my-3 text-orange-600";
                 desc.innerText = "Less likely stable INR within 6 months";
-                desc.className = "font-semibold text-lg text-orange-600 leading-tight";
+                desc.className = "font-bold text-xl text-amber-400 mb-4 leading-tight";
             }
         }
 
@@ -231,13 +387,11 @@
             const desc = document.getElementById('w12-desc');
             el.innerText = s;
             if (s >= 6) {
-                el.className = "text-7xl font-bold my-3 text-green-600";
                 desc.innerText = "Likely stable INR within 12 months";
-                desc.className = "font-semibold text-lg text-green-600 leading-tight";
+                desc.className = "font-bold text-xl text-emerald-400 mb-4 leading-tight";
             } else {
-                el.className = "text-7xl font-bold my-3 text-orange-600";
                 desc.innerText = "Less likely stable INR within 12 months";
-                desc.className = "font-semibold text-lg text-orange-600 leading-tight";
+                desc.className = "font-bold text-xl text-amber-400 mb-4 leading-tight";
             }
         }
 
